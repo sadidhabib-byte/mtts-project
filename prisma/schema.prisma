@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  avatarPath   String?
+  createdAt    DateTime      @default(now())
+
+  transactions Transaction[]
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model MetroStation {
+  id     String @id @default(cuid())
+  name   String @unique
+  active Boolean @default(true)
+
+  fromFares MetroFare[] @relation("FareFromStation")
+  toFares   MetroFare[] @relation("FareToStation")
+
+  fromTransactions Transaction[] @relation("TxnFromStation")
+  toTransactions   Transaction[] @relation("TxnToStation")
+}
+
+model MetroFare {
+  id            String       @id @default(cuid())
+  fromStationId String
+  toStationId   String
+  fare          Int
+
+  fromStation MetroStation @relation("FareFromStation", fields: [fromStationId], references: [id], onDelete: Cascade)
+  toStation   MetroStation @relation("FareToStation", fields: [toStationId], references: [id], onDelete: Cascade)
+
+  @@unique([fromStationId, toStationId])
+  @@index([toStationId])
+}
+
+model Transaction {
+  id             String       @id @default(cuid())
+  transactionId  String       @unique
+  userId         String
+  startStationId String
+  endStationId   String
+  fare           Int
+  paymentMethod  String
+  createdAt      DateTime     @default(now())
+  validTill      DateTime
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startStation MetroStation @relation("TxnFromStation", fields: [startStationId], references: [id], onDelete: Restrict)
+  endStation   MetroStation @relation("TxnToStation", fields: [endStationId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([startStationId])
+  @@index([endStationId])
+}

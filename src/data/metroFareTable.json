@@ -1,0 +1,38 @@
+{
+  "stations": [
+    "Uttara North",
+    "Uttara Center",
+    "Uttara South",
+    "Pallabi",
+    "Mirpur 11",
+    "Mirpur 10",
+    "Kazipara",
+    "Shewrapara",
+    "Agargaon",
+    "Bijoy Sarani",
+    "Farmgate",
+    "Karwan Bazar",
+    "Shahbagh",
+    "Dhaka University",
+    "Bangladesh Secretariat",
+    "Motijheel"
+  ],
+  "fares": [
+    { "from": "Uttara North", "to": "Uttara Center", "fare": 20 },
+    { "from": "Uttara Center", "to": "Uttara South", "fare": 20 },
+    { "from": "Uttara South", "to": "Pallabi", "fare": 30 },
+    { "from": "Pallabi", "to": "Mirpur 11", "fare": 20 },
+    { "from": "Mirpur 11", "to": "Mirpur 10", "fare": 20 },
+    { "from": "Mirpur 10", "to": "Kazipara", "fare": 20 },
+    { "from": "Kazipara", "to": "Shewrapara", "fare": 20 },
+    { "from": "Shewrapara", "to": "Agargaon", "fare": 30 },
+    { "from": "Agargaon", "to": "Bijoy Sarani", "fare": 20 },
+    { "from": "Bijoy Sarani", "to": "Farmgate", "fare": 20 },
+    { "from": "Farmgate", "to": "Karwan Bazar", "fare": 20 },
+    { "from": "Karwan Bazar", "to": "Shahbagh", "fare": 20 },
+    { "from": "Shahbagh", "to": "Dhaka University", "fare": 20 },
+    { "from": "Dhaka University", "to": "Bangladesh Secretariat", "fare": 20 },
+    { "from": "Bangladesh Secretariat", "to": "Motijheel", "fare": 20 }
+  ]
+}
+

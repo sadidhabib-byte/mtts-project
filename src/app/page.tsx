@@ -1,65 +1,102 @@
-import Image from "next/image";
+import { HomeDebugProbe } from "./HomeDebugProbe";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="bg-[var(--background)] text-[var(--foreground)]">
+      {/* #region agent log */}
+      {process.env.NODE_ENV === "development" ? <HomeDebugProbe /> : null}
+      {/* #endregion */}
+      <div className="bg-red-50 text-red-900">
+        <div className="mx-auto max-w-6xl px-4 py-2 text-sm">
+          <span className="font-semibold">Notice:</span>{" "}
+          Please make sure that your payment is done under 15 minutes otherwise you will not be
+          able to select your desired seat. If you find any bugs, contact support.
+        </div>
+      </div>
+
+      <section className="relative min-h-[60vh] overflow-hidden">
+        {/* 1. BACKGROUND LAYER: Changed from -z-10 to z-0 */}
+        <div
+          id="home-hero-bg"
+          className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center"
+          style={{
+            backgroundImage:
+              "radial-gradient(ellipse at top, rgba(99,102,241,0.28), transparent 55%), radial-gradient(ellipse at bottom, rgba(16,185,129,0.22), transparent 55%), linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('/images/metro.jpg')",
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+
+        {/* 2. CONTENT LAYER: Added "relative z-10" to lift the text above the background */}
+        <div className="relative z-10 mx-auto max-w-6xl px-4 py-16">
+          <div className="grid gap-8 md:grid-cols-2 md:items-center">
+            {/* Left Column: Text & Buttons */}
+            <div>
+              <h1 className="text-4xl font-semibold tracking-tight">
+                Mass Transport Ticketing System
+              </h1>
+              <p className="mt-4 text-lg text-[var(--muted)]">
+                Purchase Metro tickets with a clean, fast checkout. Train and Bus will be added next.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <a
+                  href="/metro"
+                  className="rounded-xl bg-zinc-900 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-zinc-800"
+                >
+                  Buy Metro Ticket
+                </a>
+                <a
+                  href="/signup"
+                  className="rounded-xl border border-[var(--border)] px-5 py-3 text-center text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--card)]"
+                >
+                  Create Account
+                </a>
+              </div>
+            </div>
+
+            {/* Right Column: Cards */}
+            <div className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+              {/* The card background is working fine here! */}
+              <div className="pointer-events-none absolute inset-0 -z-10 bg-[url('/images/metro.jpg')] bg-cover bg-center opacity-15" />
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="rounded-2xl bg-gradient-to-br from-indigo-500 to-sky-500 p-4 text-white">
+                  <div className="text-sm font-semibold">Metro</div>
+                  <div className="mt-2 text-xs text-white/80">
+                    Comfort travel with updated technology.
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-[var(--border)] bg-[color:var(--card)] p-4 text-[var(--muted)]">
+                  <div className="text-sm font-semibold text-[var(--foreground)]">Train</div>
+                  <div className="mt-2 text-xs">Coming soon</div>
+                </div>
+                <div className="rounded-2xl border border-[var(--border)] bg-[color:var(--card)] p-4 text-[var(--muted)]">
+                  <div className="text-sm font-semibold text-[var(--foreground)]">Bus</div>
+                  <div className="mt-2 text-xs">Coming soon</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="bg-[color:var(--card)]/40">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <h2 className="text-center text-2xl font-semibold">Why Choose Us</h2>
+          <div className="mt-8 grid gap-4 md:grid-cols-4">
+            <Card title="Convenience" body="Book tickets from home with an easy platform." />
+            <Card title="Reliability" body="Punctual services and consistent experience." />
+            <Card title="Affordability" body="Pricing aligned with official fares." />
+            <Card title="Ease of Payment" body="Multiple payment methods (simulated for demo)." />
+          </div>
         </div>
-      </main>
+      </section>
+    </div>
+  );
+}
+
+function Card({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="text-sm font-semibold text-[var(--foreground)]">{title}</div>
+      <div className="mt-2 text-sm text-[var(--muted)]">{body}</div>
     </div>
   );
 }
