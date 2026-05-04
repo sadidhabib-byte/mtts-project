@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { BusHoldTimer } from "@/components/BusHoldTimer";
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -13,6 +14,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Navbar />
+      <BusHoldTimer />
       <main className="flex-1">{children}</main>
       <Footer />
     </>

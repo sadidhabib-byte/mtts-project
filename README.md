@@ -1,9 +1,12 @@
 ## MASS Ticketing System (Next.js)
 
-Web app for **Home → Metro ticket purchase → Checkout → Success/Receipt** with:
+Web app for **Home → Metro ticket purchase → Checkout → Success/Receipt** and **Bus booking (with seat holds)** with:
 - **Real signup/login** (NextAuth Credentials + bcrypt)
 - **Real database** (MySQL + Prisma)
 - **Simulated payment** (demo accounts), but **transactions are stored in DB**
+
+## Project guide (how it works)
+See `PROJECT_GUIDE.md` for an end-to-end explanation of the code structure, request flow, auth, DB models, and key routes.
 
 ## Getting Started
 
@@ -78,9 +81,19 @@ DATABASE_URL="mysql://root:password@localhost:3306/mass_ticketing"
 npx prisma migrate dev
 ```
 
-### 6) Seed initial Metro stations + fares (recommended)
+### 5) Generate Prisma client
 
-This loads `src/data/metroFareTable.json` into the database so the Metro dropdowns and admin fare list have data.
+If you update `prisma/schema.prisma`, regenerate Prisma Client types:
+
+```powershell
+npx prisma generate
+```
+
+### 6) Seed initial data (recommended)
+
+This loads:
+- Metro: `src/data/metroFareTable.json` → stations + fares
+- Bus: operators/buses/seat layouts + starter routes + demo trips + initial seat states
 
 ```powershell
 npm run seed
@@ -110,6 +123,20 @@ Open `http://localhost:3000`.
 5) Checkout at `/checkout`
 6) You’ll land on `/success` with a **QR code** and a **Download Receipt** button
 
+## Bus booking (intercity) flow
+
+1) Login at `/login`
+2) Go to `/bus`
+3) Choose route + date → select a trip
+4) Pick seats on `/bus/seats?tripId=...`
+5) Click **Hold seats & continue** → `/bus/checkout`
+6) Complete demo payment → `/bus/success?bookingRef=...`
+
+### Seat hold rules
+- Seats are held for **15 minutes** after selection.
+- A small countdown popup appears (bottom-right) while a hold is active.
+- If time expires before payment, seats return to the pool automatically.
+
 ## Demo payment credentials
 
 Use one of these on the Checkout page:
@@ -125,6 +152,8 @@ If you enter different credentials, the API returns an error (to mimic “invali
 - **Login**: `/login`
 - **Admin login**: `/control/login`
 - **Admin dashboard**: `/control`
+- **Bus booking**: `/bus`
+- **Bus checkout**: `/bus/checkout`
 - **Metro purchase**: `/metro`
 - **Confirm**: `/metro/confirm`
 - **Checkout**: `/checkout`
