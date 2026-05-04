@@ -306,6 +306,107 @@ async function main() {
   }
 
   console.log(`[seed] Seeded ${busOperators.length} operators, ${seededBuses.length} buses, ${seededRoutes.length} routes, ${tripCount} trips.`);
+
+  // ----------------------------------------------------------------------------
+  // Train (intercity) seed
+  // ----------------------------------------------------------------------------
+  console.log("[seed] Seeding train stations, trains, and compartments...");
+
+  const trainStations = [
+    { name: "Dhaka", district: "Dhaka" },
+    { name: "Chattogram", district: "Chattogram" },
+    { name: "Sylhet", district: "Sylhet" },
+    { name: "Khulna", district: "Khulna" },
+    { name: "Rajshahi", district: "Rajshahi" },
+    { name: "Rangpur", district: "Rangpur" },
+    { name: "Mymensingh", district: "Mymensingh" },
+    { name: "Comilla", district: "Comilla" },
+    { name: "Dinajpur", district: "Dinajpur" },
+    { name: "Noakhali", district: "Noakhali" },
+    { name: "Barisal", district: "Barisal" },
+  ];
+
+  const stationByName = new Map();
+  for (const s of trainStations) {
+    const row = await prisma.trainStation.upsert({
+      where: { name: s.name },
+      update: { active: true, district: s.district },
+      create: { name: s.name, district: s.district, active: true },
+      select: { id: true, name: true },
+    });
+    stationByName.set(row.name, row);
+  }
+
+  // Bangladesh train schedule (legacy reference data). Each entry is bidirectional;
+  // we create the forward and reverse train automatically.
+  const trainsToSeed = [
+    { name: "Subarna Express",  from: "Dhaka",      to: "Chattogram", forward: "07:00", reverse: "15:00", fare: 500 },
+    { name: "Parabat Express",  from: "Dhaka",      to: "Sylhet",     forward: "06:40", reverse: "15:00", fare: 600 },
+    { name: "Upakul Express",   from: "Dhaka",      to: "Noakhali",   forward: "15:20", reverse: "06:00", fare: 400 },
+    { name: "Ekota Express",    from: "Dhaka",      to: "Dinajpur",   forward: "10:00", reverse: "20:00", fare: 800 },
+    { name: "Chattala Express", from: "Chattogram", to: "Sylhet",     forward: "08:00", reverse: "17:00", fare: 1000 },
+    { name: "Meghna Express",   from: "Chattogram", to: "Noakhali",   forward: "09:00", reverse: "18:00", fare: 900 },
+    { name: "Jamuna Express",   from: "Chattogram", to: "Dinajpur",   forward: "10:00", reverse: "19:00", fare: 800 },
+    { name: "Surma Express",    from: "Sylhet",     to: "Noakhali",   forward: "11:00", reverse: "20:00", fare: 850 },
+    { name: "Tista Express",    from: "Sylhet",     to: "Dinajpur",   forward: "12:00", reverse: "21:00", fare: 1200 },
+    { name: "Sundarban Express", from: "Dhaka",     to: "Khulna",     forward: "08:15", reverse: "22:20", fare: 700 },
+  ];
+
+  function makeCompartmentCreate(count = 4, totalSeats = 50) {
+    return Array.from({ length: count }, (_, i) => ({
+      name: `C${i + 1}`,
+      totalSeats,
+    }));
+  }
+
+  let trainCount = 0;
+  for (const t of trainsToSeed) {
+    const fromStation = stationByName.get(t.from);
+    const toStation = stationByName.get(t.to);
+    if (!fromStation || !toStation) continue;
+
+    // Forward direction: skip if a same-name same-route train already exists.
+    const fwdExisting = await prisma.train.findFirst({
+      where: { name: t.name, startStationId: fromStation.id, endStationId: toStation.id },
+      select: { id: true },
+    });
+    if (!fwdExisting) {
+      await prisma.train.create({
+        data: {
+          name: t.name,
+          startStationId: fromStation.id,
+          endStationId: toStation.id,
+          departureTime: timeOnly(...t.forward.split(":").map(Number)),
+          fare: t.fare,
+          active: true,
+          compartments: { create: makeCompartmentCreate() },
+        },
+      });
+      trainCount += 1;
+    }
+
+    // Reverse direction
+    const revExisting = await prisma.train.findFirst({
+      where: { name: t.name, startStationId: toStation.id, endStationId: fromStation.id },
+      select: { id: true },
+    });
+    if (!revExisting) {
+      await prisma.train.create({
+        data: {
+          name: t.name,
+          startStationId: toStation.id,
+          endStationId: fromStation.id,
+          departureTime: timeOnly(...t.reverse.split(":").map(Number)),
+          fare: t.fare,
+          active: true,
+          compartments: { create: makeCompartmentCreate() },
+        },
+      });
+      trainCount += 1;
+    }
+  }
+
+  console.log(`[seed] Seeded ${trainStations.length} train stations and ${trainCount} new trains.`);
   await prisma.$disconnect();
 }
 

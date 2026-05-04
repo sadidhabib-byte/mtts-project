@@ -55,7 +55,7 @@ export function Navbar() {
         <nav className="hidden items-center gap-1 md:flex">
           <NavLink href="/" label="Home" />
           <NavLink href="/metro" label="Metro" />
-          <span className="rounded-full px-3 py-1.5 text-sm text-[var(--muted)]">Train</span>
+          <NavLink href="/train" label="Train" />
           <NavLink href="/bus" label="Bus" />
         </nav>
 

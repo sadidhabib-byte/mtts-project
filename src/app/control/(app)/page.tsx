@@ -4,7 +4,7 @@ export default function ControlHome() {
   return (
     <div>
       <h1 className="text-3xl font-semibold tracking-tight">Admin Dashboard</h1>
-      <p className="mt-2 text-[var(--muted)]">Manage Metro and Bus settings.</p>
+      <p className="mt-2 text-[var(--muted)]">Manage Metro, Bus, and Train settings.</p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link
@@ -41,6 +41,22 @@ export default function ControlHome() {
         >
           <div className="text-sm font-semibold">Bus trip management</div>
           <div className="mt-2 text-sm text-[var(--muted)]">Schedule trips (date/time/fare).</div>
+        </Link>
+        <Link
+          href="/control/train/stations"
+          className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm hover:shadow-md"
+        >
+          <div className="text-sm font-semibold">Train station management</div>
+          <div className="mt-2 text-sm text-[var(--muted)]">Add, rename, toggle active.</div>
+        </Link>
+        <Link
+          href="/control/train/trains"
+          className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm hover:shadow-md"
+        >
+          <div className="text-sm font-semibold">Train management</div>
+          <div className="mt-2 text-sm text-[var(--muted)]">
+            Schedule trains, edit fares, manage compartments.
+          </div>
         </Link>
       </div>
     </div>

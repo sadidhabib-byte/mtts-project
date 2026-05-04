@@ -23,6 +23,9 @@ model User {
 
   busSeatHolds BusSeatHold[]
   busBookings  BusBooking[]
+
+  trainSeatHolds TrainSeatHold[]
+  trainBookings  TrainBooking[]
 }
 
 model Admin {
@@ -234,4 +237,151 @@ model BusBookingSeat {
 
   @@unique([bookingId, seatCode])
   @@index([tripId, seatCode])
+}
+
+enum TrainSeatStateKind {
+  AVAILABLE
+  HELD
+  BOOKED
+}
+
+enum TrainBookingStatus {
+  PENDING
+  CONFIRMED
+  EXPIRED
+  CANCELLED
+}
+
+model TrainStation {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  district  String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  startTrains Train[] @relation("TrainStartStation")
+  endTrains   Train[] @relation("TrainEndStation")
+}
+
+model Train {
+  id             String   @id @default(cuid())
+  name           String
+  startStationId String
+  endStationId   String
+  departureTime  DateTime @db.Time(0)
+  fare           Int
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  startStation TrainStation @relation("TrainStartStation", fields: [startStationId], references: [id], onDelete: Restrict)
+  endStation   TrainStation @relation("TrainEndStation", fields: [endStationId], references: [id], onDelete: Restrict)
+
+  compartments TrainCompartment[]
+  seatStates   TrainSeatState[]
+  seatHolds    TrainSeatHold[]
+  bookings     TrainBooking[]
+  bookingSeats TrainBookingSeat[]
+
+  @@index([startStationId, endStationId])
+}
+
+model TrainCompartment {
+  id         String   @id @default(cuid())
+  trainId    String
+  name       String
+  totalSeats Int      @default(50)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  train Train @relation(fields: [trainId], references: [id], onDelete: Cascade)
+
+  seatStates   TrainSeatState[]
+  bookingSeats TrainBookingSeat[]
+
+  @@unique([trainId, name])
+}
+
+model TrainSeatState {
+  id            String             @id @default(cuid())
+  trainId       String
+  compartmentId String
+  journeyDate   DateTime           @db.Date
+  seatNumber    Int
+  state         TrainSeatStateKind @default(AVAILABLE)
+  holdId        String?
+  bookingId     String?
+  expiresAt     DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  train       Train            @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  compartment TrainCompartment @relation(fields: [compartmentId], references: [id], onDelete: Cascade)
+  hold        TrainSeatHold?   @relation(fields: [holdId], references: [id], onDelete: SetNull)
+  booking     TrainBooking?    @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@unique([trainId, journeyDate, compartmentId, seatNumber])
+  @@index([trainId, journeyDate, state])
+  @@index([compartmentId, journeyDate])
+  @@index([expiresAt])
+}
+
+model TrainSeatHold {
+  id          String   @id @default(cuid())
+  userId      String
+  trainId     String
+  journeyDate DateTime @db.Date
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  train Train @relation(fields: [trainId], references: [id], onDelete: Cascade)
+
+  seatStates TrainSeatState[]
+
+  @@index([userId, expiresAt])
+  @@index([trainId, journeyDate, expiresAt])
+}
+
+model TrainBooking {
+  id            String             @id @default(cuid())
+  bookingRef    String             @unique
+  userId        String
+  trainId       String
+  journeyDate   DateTime           @db.Date
+  departureTime DateTime           @db.Time(0)
+  amount        Int
+  paymentMethod String
+  status        TrainBookingStatus @default(PENDING)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  confirmedAt   DateTime?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  train Train @relation(fields: [trainId], references: [id], onDelete: Restrict)
+
+  seats      TrainBookingSeat[]
+  seatStates TrainSeatState[]
+
+  @@index([userId, createdAt])
+  @@index([trainId, journeyDate])
+  @@index([status])
+}
+
+model TrainBookingSeat {
+  id            String   @id @default(cuid())
+  bookingId     String
+  trainId       String
+  compartmentId String
+  seatNumber    Int
+  createdAt     DateTime @default(now())
+
+  booking     TrainBooking     @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  train       Train            @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  compartment TrainCompartment @relation(fields: [compartmentId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, compartmentId, seatNumber])
+  @@index([trainId, compartmentId, seatNumber])
 }

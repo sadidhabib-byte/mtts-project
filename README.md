@@ -1,6 +1,6 @@
 ## MASS Ticketing System (Next.js)
 
-Web app for **Home → Metro ticket purchase → Checkout → Success/Receipt** and **Bus booking (with seat holds)** with:
+Web app for **Home → Metro ticket purchase → Checkout → Success/Receipt**, **Bus booking (with seat holds)**, and **Train booking (with seat holds + compartments)** with:
 - **Real signup/login** (NextAuth Credentials + bcrypt)
 - **Real database** (MySQL + Prisma)
 - **Simulated payment** (demo accounts), but **transactions are stored in DB**
@@ -94,6 +94,7 @@ npx prisma generate
 This loads:
 - Metro: `src/data/metroFareTable.json` → stations + fares
 - Bus: operators/buses/seat layouts + starter routes + demo trips + initial seat states
+- Train: 11 Bangladesh stations + legacy Bangladeshi trains (Subarna, Parabat, Upakul, Ekota, Chattala, Meghna, Jamuna, Surma, Tista, Sundarban) — both directions, each with 4 compartments × 50 seats
 
 ```powershell
 npm run seed
@@ -137,6 +138,21 @@ Open `http://localhost:3000`.
 - A small countdown popup appears (bottom-right) while a hold is active.
 - If time expires before payment, seats return to the pool automatically.
 
+## Train booking (intercity) flow
+
+1) Login at `/login`
+2) Go to `/train`
+3) Pick start/end station + date → list of trains for that route
+4) Click **Choose seats** → `/train/seats?trainId=...&date=...`
+5) Pick a compartment, then numbered seats (1..N) inside it
+6) Click **Hold seats & continue** → `/train/checkout`
+7) Complete demo payment → `/train/success?bookingRef=...`
+
+### Train notes
+- Trains are **schedule-free**: every active train runs on every date the user picks (no per-date trip rows). Seat-state rows are created on-demand the first time a (train, date, compartment) is viewed.
+- Seat holds reuse the same 15-minute rule as bus.
+- A separate **train hold timer** appears bottom-right when a train hold is active; it stacks above the bus timer if both exist.
+
 ## Demo payment credentials
 
 Use one of these on the Checkout page:
@@ -154,6 +170,8 @@ If you enter different credentials, the API returns an error (to mimic “invali
 - **Admin dashboard**: `/control`
 - **Bus booking**: `/bus`
 - **Bus checkout**: `/bus/checkout`
+- **Train booking**: `/train`
+- **Train checkout**: `/train/checkout`
 - **Metro purchase**: `/metro`
 - **Confirm**: `/metro/confirm`
 - **Checkout**: `/checkout`
@@ -165,6 +183,10 @@ If you enter different credentials, the API returns an error (to mimic “invali
 - Admin and user sessions are **mutually exclusive**:
   - Signing into admin clears the user (NextAuth) session cookies.
   - Signing into a user clears the admin session cookie.
+
+### Train admin (under `/control/train/*`)
+- **Stations** (`/control/train/stations`): add stations, toggle active, delete (only if no train references the station).
+- **Trains** (`/control/train/trains`): add a train (creates the reverse direction automatically; auto-seeds N compartments × seats each), edit fare/time/active, delete (only if no bookings/holds). Click **Edit compartments** on any train row to add/rename/resize/delete its coaches inline. Lowering a coach's `totalSeats` below the highest already-booked seat number is blocked.
 
 ## Troubleshooting
 

@@ -4,7 +4,22 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type Hold = { id: string; tripId: string; expiresAt: string; seats: string[] };
+type HoldSeat = { compartmentId: string; compartmentName: string; seatNumber: number };
+type Hold = {
+  id: string;
+  trainId: string;
+  journeyDate: string;
+  expiresAt: string;
+  seats: HoldSeat[];
+  train: {
+    id: string;
+    name: string;
+    fare: number;
+    departureTime: string;
+    fromStation: string;
+    toStation: string;
+  } | null;
+};
 
 function formatMs(ms: number) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -13,7 +28,7 @@ function formatMs(ms: number) {
   return `${m}:${String(r).padStart(2, "0")}`;
 }
 
-export function BusHoldTimer() {
+export function TrainHoldTimer() {
   const pathname = usePathname();
   const [hold, setHold] = useState<Hold | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -26,12 +41,12 @@ export function BusHoldTimer() {
   useEffect(() => {
     let cancelled = false;
     async function poll() {
-      const res = await fetch("/api/bus/hold").catch(() => null);
+      const res = await fetch("/api/train/hold").catch(() => null);
       if (res?.status === 401) {
         setHold(null);
         return;
       }
-      const data = res ? ((await res.json().catch(() => null)) as any) : null;
+      const data = res ? ((await res.json().catch(() => null)) as { ok?: boolean; hold?: Hold | null }) : null;
       if (cancelled) return;
       if (!data?.ok) {
         setHold(null);
@@ -47,24 +62,38 @@ export function BusHoldTimer() {
     };
   }, []);
 
-  const remainingMs = useMemo(() => (hold ? new Date(hold.expiresAt).getTime() - now : 0), [hold, now]);
+  const remainingMs = useMemo(
+    () => (hold ? new Date(hold.expiresAt).getTime() - now : 0),
+    [hold, now],
+  );
   const visible = !!hold && remainingMs > 0;
-  const onCheckout = pathname.startsWith("/bus/checkout");
+  const onCheckout = pathname.startsWith("/train/checkout");
 
   async function cancelHold() {
-    await fetch("/api/bus/holds/cancel", { method: "POST" }).catch(() => {});
+    await fetch("/api/train/holds/cancel", { method: "POST" }).catch(() => {});
     setHold(null);
   }
 
-  if (!visible) return null;
+  if (!visible || !hold) return null;
+
+  const seatsByCoach = new Map<string, number[]>();
+  for (const s of hold.seats) {
+    const arr = seatsByCoach.get(s.compartmentName) ?? [];
+    arr.push(s.seatNumber);
+    seatsByCoach.set(s.compartmentName, arr);
+  }
+  const seatSummary = Array.from(seatsByCoach.entries())
+    .map(([cname, arr]) => `${cname}: ${arr.sort((a, b) => a - b).join(", ")}`)
+    .join("  ·  ");
 
   return (
     <div className="w-[320px] rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-lg">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold">Seat hold active</div>
+          <div className="text-sm font-semibold">Train seat hold active</div>
           <div className="mt-1 text-xs text-[var(--muted)]">
-            Expires in <span className="font-semibold text-[var(--foreground)]">{formatMs(remainingMs)}</span>
+            Expires in{" "}
+            <span className="font-semibold text-[var(--foreground)]">{formatMs(remainingMs)}</span>
           </div>
         </div>
         <button
@@ -76,12 +105,12 @@ export function BusHoldTimer() {
         </button>
       </div>
 
-      <div className="mt-3 text-xs text-[var(--muted)]">Seats: {hold?.seats?.join(", ")}</div>
+      <div className="mt-3 text-xs text-[var(--muted)]">Seats: {seatSummary || "—"}</div>
 
       {!onCheckout ? (
         <div className="mt-4">
           <Link
-            href="/bus/checkout"
+            href="/train/checkout"
             className="block rounded-xl bg-zinc-900 px-4 py-2 text-center text-xs font-semibold text-white hover:bg-zinc-800"
           >
             Continue to payment
@@ -91,4 +120,3 @@ export function BusHoldTimer() {
     </div>
   );
 }
-

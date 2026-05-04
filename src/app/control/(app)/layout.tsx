@@ -50,6 +50,18 @@ export default async function ControlAppLayout({ children }: { children: React.R
             >
               Trips
             </Link>
+            <Link
+              href="/control/train/stations"
+              className="rounded-full px-3 py-1.5 text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card)]"
+            >
+              Train Stations
+            </Link>
+            <Link
+              href="/control/train/trains"
+              className="rounded-full px-3 py-1.5 text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card)]"
+            >
+              Trains
+            </Link>
             <form action="/api/admin/logout" method="post">
               <button
                 type="submit"
